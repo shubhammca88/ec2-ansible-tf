@@ -6,5 +6,5 @@ region              = "us-east-1"
 server_count        = 4
 server_names        = ["master", "server1", "server2", "server3"]
 environments        = ["dev", "staging", "prod", "test"]
-server_ports        = [[22, 80], [22, 8000], [22, 3306], [22, 443]]
+server_ports        = [[22, 80], [22, 8000], [22, 3306], [22, 443, 80]]
 allowed_cidr_blocks = ["0.0.0.0/0", "0.0.0.0/0"]
