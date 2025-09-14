@@ -1,80 +1,52 @@
-# Multi-Server EC2 Infrastructure
+# Multi-Environment EC2 with Ansible
 
-Terraform configuration for deploying 4 EC2 servers with different environments and security groups.
+Terraform + Ansible setup for managing 4 EC2 servers across different environments.
 
-## Architecture
+## Infrastructure
 
-- **Configurable EC2 instances** (Free Tier eligible)
-- **Custom instance types** per server via array
-- **Individual Security Groups** with dynamic port configuration
-- **Multiple Environments**: dev, staging, prod, test
-- **Default VPC** with automatic AZ selection
+| Server | Environment | Purpose |
+|--------|-------------|----------|
+| master | dev | Ansible control node |
+| server1 | staging | Staging environment |
+| server2 | prod | Production database |
+| server3 | test | Testing with nginx |
 
-## Server Configuration
+## Quick Start
 
-| Server | Environment | Ports |
-|--------|-------------|-------|
-| master | dev | 22, 80 |
-| server1 | staging | 22, 8000 |
-| server2 | prod | 22, 3306 |
-| server3 | test | 22, 443 |
-
-## Variables
-
-- `server_count`: Number of servers (default: 1, limited by vCPU quota)
-- `server_names`: Server names array
-- `environments`: Environment tags for each server
-- `server_ports`: Port configuration per server
-- `instance_types`: Custom instance type for each server
-- `region`: AWS region (default: us-east-1)
-
-## Prerequisites
-
-1. AWS CLI configured:
+1. **Deploy Infrastructure**
    ```bash
-   aws configure
+   terraform init
+   terraform apply
    ```
 
-2. SSH key pair:
+2. **Setup Ansible** (on master server)
    ```bash
-   ssh-keygen -t rsa -b 2048 -f id_rsa
+   ssh -i id_rsa ubuntu@<master-ip>
+   sudo apt update && sudo apt install -y ansible
    ```
 
-## Deployment
+3. **Run Playbooks**
+   ```bash
+   ansible-playbook -i inventory playbook/install_nginx.yml
+   ```
 
-```bash
-terraform init
-terraform plan
-terraform apply
-```
+## Ansible Inventory
 
-### Troubleshooting
+The `inventory` file automatically groups servers by environment:
+- `[dev]` - master server
+- `[staging]` - server1
+- `[prod]` - server2  
+- `[test]` - server3
 
-**InsufficientInstanceCapacity errors:**
-1. Change instance types in `instance_types` array
-2. Try different region in terraform.tfvars
-3. Wait and retry later
+## Management
 
-**VcpuLimitExceeded errors:**
-1. Reduce `server_count` to fit within vCPU limit
-2. Request vCPU limit increase via AWS Service Quotas
-3. Use smaller instance types (t2.nano = 1 vCPU)
-
-## Outputs
-
-- `server_ips`: All server public IP addresses
+- **Master server** has Ansible installed for managing all environments
+- **Inventory file** contains all server IPs and SSH configuration
+- **Playbooks** in `playbook/` directory for automation tasks
+- **Environment-specific** deployments using inventory groups
 
 ## Cleanup
 
 ```bash
 terraform destroy
 ```
-
-## Files
-
-- `main.tf` - EC2 instances with count
-- `network.tf` - Dynamic security groups and key pair
-- `variables.tf` - Input variables
-- `outputs.tf` - Server IP outputs
-- `terraform.tfvars` - Variable values
-- `mydeploy.sh` - Server setup script
